@@ -9,6 +9,7 @@ target/
 .vscode/
 
 # Secrets (nunca subir)
+configuracion.local.properties
 .env
 *.env.local
 deploy/secrets/

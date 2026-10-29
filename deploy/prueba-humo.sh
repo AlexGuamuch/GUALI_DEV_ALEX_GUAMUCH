@@ -73,16 +73,32 @@ paso "Rutas internas no publicadas (404)"
 c=$(curl -s -o /dev/null -w '%{http_code}' "$BASE/interno/estadisticas?desde=2026-01-01&hasta=2026-01-02")
 [[ $c == 404 ]] && bien || mal "$c"
 
-usuario=$(grep '^ADMIN_USUARIO=' "$raiz/.env" | cut -d= -f2)
-clave=$(grep '^ADMIN_CLAVE=' "$raiz/.env" | cut -d= -f2)
+# Credenciales candidatas: variables GUALI_ADMIN_*, configuracion.properties (PC sin Docker) y .env (Docker).
+candidatos=()
+[[ -n "${GUALI_ADMIN_USUARIO:-}" ]] && candidatos+=("$GUALI_ADMIN_USUARIO:$GUALI_ADMIN_CLAVE")
+if [[ -f "$raiz/configuracion.properties" ]]; then
+  u=$(grep '^admin.usuario=' "$raiz/configuracion.properties" | cut -d= -f2- | tr -d '')
+  c=$(grep '^admin.clave=' "$raiz/configuracion.properties" | cut -d= -f2- | tr -d '')
+  [[ -n "$u" ]] && candidatos+=("$u:$c")
+fi
+if [[ -f "$raiz/.env" ]]; then
+  u=$(grep '^ADMIN_USUARIO=' "$raiz/.env" | cut -d= -f2- | tr -d '')
+  c=$(grep '^ADMIN_CLAVE=' "$raiz/.env" | cut -d= -f2- | tr -d '')
+  [[ -n "$u" ]] && candidatos+=("$u:$c")
+fi
+usuario="${candidatos[0]%%:*}"
 
 paso "Login con contraseña incorrecta (401)"
 r=$(pedir POST /api/auth/login "{\"username\":\"$usuario\",\"password\":\"incorrecta\"}")
 [[ $(codigo "$r") == 401 ]] && bien || mal "$(codigo "$r")"
 
 paso "Login de administrador (cookie HttpOnly)"
-r=$(pedir POST /api/auth/login "{\"username\":\"$usuario\",\"password\":\"$clave\"}")
-[[ $(codigo "$r") == 200 ]] && grep -q GUALI_SESION "$jar" && bien || mal "$(codigo "$r")"
+logueado=no
+for cand in "${candidatos[@]}"; do
+  r=$(pedir POST /api/auth/login "{\"username\":\"${cand%%:*}\",\"password\":\"${cand#*:}\"}")
+  if [[ $(codigo "$r") == 200 ]] && grep -q GUALI_SESION "$jar"; then logueado=si; break; fi
+done
+[[ $logueado == si ]] && bien || mal "$(codigo "$r")"
 
 paso "Listar administradores"
 r=$(pedir GET /api/admin/usuarios)

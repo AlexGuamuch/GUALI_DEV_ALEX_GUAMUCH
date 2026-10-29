@@ -1,0 +1,9 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Guali · todos los servicios" type="CompoundRunConfigurationType">
+    <toRun name="1 · compilador-service" type="Application" />
+    <toRun name="2 · lecciones-service" type="Application" />
+    <toRun name="3 · admin-service" type="Application" />
+    <toRun name="4 · gateway" type="Application" />
+    <method v="2" />
+  </configuration>
+</component>

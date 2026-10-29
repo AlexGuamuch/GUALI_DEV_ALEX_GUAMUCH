@@ -1,3 +1,7 @@
+# Prioridad de la configuración:
+#   1. Variables de entorno (servidor con Docker: DB_URL, TOKEN_*, JWT_*).
+#   2. configuracion.properties en la carpeta del proyecto (db.*) y secretos generados en ~/.guali (guali.local.*).
+
 server:
   port: 8081
   shutdown: graceful
@@ -10,9 +14,10 @@ spring:
   application:
     name: lecciones-service
   datasource:
-    url: ${DB_URL:jdbc:mariadb://localhost:3306/guali_lecciones}
-    username: ${DB_USUARIO:guali_lecciones}
-    password: ${DB_CLAVE:}
+    # createDatabaseIfNotExist: en una PC la base de datos se crea sola la primera vez.
+    url: ${DB_URL:jdbc:mariadb://${db.servidor:localhost}:${db.puerto:3306}/guali_lecciones?createDatabaseIfNotExist=true}
+    username: ${DB_USUARIO:${db.usuario:root}}
+    password: ${DB_CLAVE:${db.clave:}}
     hikari:
       maximum-pool-size: 10
   jpa:
@@ -30,16 +35,16 @@ spring:
 
 guali:
   seguridad:
-    clave-publica: ${JWT_CLAVE_PUBLICA:file:../../deploy/secrets/jwt-publica.pem}
+    clave-publica: ${JWT_CLAVE_PUBLICA:${guali.local.clave-publica:}}
     cookie-segura: ${COOKIE_SEGURA:false}
-    token-interno: ${TOKEN_INTERNO:}
-    token-gateway: ${TOKEN_GATEWAY:}
+    token-interno: ${TOKEN_INTERNO:${guali.local.token-interno:}}
+    token-gateway: ${TOKEN_GATEWAY:${guali.local.token-gateway:}}
   lecciones:
     semilla: ${LECCIONES_SEMILLA:true}
   compilador:
     url: ${COMPILADOR_URL:http://localhost:8083}
     # Token distinto al interno: el compilador ejecuta código ajeno y no debe conocer otros secretos.
-    token: ${TOKEN_COMPILADOR:}
+    token: ${TOKEN_COMPILADOR:${guali.local.token-compilador:}}
 
 management:
   endpoints:

@@ -23,7 +23,8 @@ public class TokenInternoFilter extends OncePerRequestFilter {
 
     public TokenInternoFilter(String token) {
         if (token == null || token.length() < 24) {
-            throw new IllegalStateException("guali.seguridad.token-interno debe tener al menos 24 caracteres");
+            throw new IllegalStateException("Falta TOKEN_INTERNO (mínimo 24 caracteres). "
+                    + "Ejecuta: bash deploy/generar-secretos.sh");
         }
         this.esperado = token.getBytes(StandardCharsets.UTF_8);
     }

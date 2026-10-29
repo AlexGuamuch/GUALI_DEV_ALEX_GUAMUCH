@@ -18,6 +18,10 @@
     <dependencies>
         <dependency>
             <groupId>edu.umg.guali</groupId>
+            <artifactId>configuracion-local</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>edu.umg.guali</groupId>
             <artifactId>seguridad-comun</artifactId>
         </dependency>
         <dependency>

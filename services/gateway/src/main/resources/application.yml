@@ -5,6 +5,10 @@ server:
 spring:
   application:
     name: gateway
+  web:
+    resources:
+      # En una PC el gateway sirve el frontend en http://localhost:8080 (en el servidor lo sirve nginx).
+      static-locations: ${guali.local.frontend:classpath:/static/}
   cloud:
     gateway:
       server:
@@ -25,7 +29,7 @@ spring:
 
 guali:
   cookie-segura: ${COOKIE_SEGURA:false}
-  token-gateway: ${TOKEN_GATEWAY:}
+  token-gateway: ${TOKEN_GATEWAY:${guali.local.token-gateway:}}
 
 management:
   endpoints:

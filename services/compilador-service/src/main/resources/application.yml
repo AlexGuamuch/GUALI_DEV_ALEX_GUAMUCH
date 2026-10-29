@@ -18,7 +18,8 @@ guali:
     salida-maxima-caracteres: 65536
     aislado: ${COMPILADOR_AISLADO:false}
   seguridad:
-    token-interno: ${TOKEN_COMPILADOR:}
+    # En Docker viene de la variable de entorno; en una PC se genera solo (~/.guali).
+    token-interno: ${TOKEN_COMPILADOR:${guali.local.token-compilador:}}
 
 management:
   endpoints:

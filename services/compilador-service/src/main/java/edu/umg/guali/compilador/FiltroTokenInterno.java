@@ -24,7 +24,8 @@ public class FiltroTokenInterno extends OncePerRequestFilter {
 
     public FiltroTokenInterno(@Value("${guali.seguridad.token-interno}") String token) {
         if (token == null || token.length() < 24) {
-            throw new IllegalStateException("TOKEN_INTERNO debe tener al menos 24 caracteres");
+            throw new IllegalStateException("Falta TOKEN_COMPILADOR (mínimo 24 caracteres). "
+                    + "Ejecuta: bash deploy/generar-secretos.sh");
         }
         this.esperado = token.getBytes(StandardCharsets.UTF_8);
     }

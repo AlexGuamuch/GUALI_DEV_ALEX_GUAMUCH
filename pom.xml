@@ -19,6 +19,7 @@
     <description>Plataforma web para practicar Java con lecciones cortas (proyecto Desarrollo Web, UMG).</description>
 
     <modules>
+        <module>services/configuracion-local</module>
         <module>services/seguridad-comun</module>
         <module>services/lecciones-service</module>
         <module>services/compilador-service</module>
@@ -42,6 +43,11 @@
                 <version>${spring-cloud.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>edu.umg.guali</groupId>
+                <artifactId>configuracion-local</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>edu.umg.guali</groupId>

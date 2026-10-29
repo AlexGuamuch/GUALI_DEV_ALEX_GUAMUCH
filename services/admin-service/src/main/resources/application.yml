@@ -1,3 +1,7 @@
+# Prioridad de la configuración:
+#   1. Variables de entorno (servidor con Docker: DB_URL, TOKEN_*, JWT_*, ADMIN_*).
+#   2. configuracion.properties en la carpeta del proyecto (db.*, admin.*) y secretos generados en ~/.guali.
+
 server:
   port: 8082
   shutdown: graceful
@@ -10,9 +14,10 @@ spring:
   application:
     name: admin-service
   datasource:
-    url: ${DB_URL:jdbc:mariadb://localhost:3306/guali_admin}
-    username: ${DB_USUARIO:guali_admin}
-    password: ${DB_CLAVE:}
+    # createDatabaseIfNotExist: en una PC la base de datos se crea sola la primera vez.
+    url: ${DB_URL:jdbc:mariadb://${db.servidor:localhost}:${db.puerto:3306}/guali_admin?createDatabaseIfNotExist=true}
+    username: ${DB_USUARIO:${db.usuario:root}}
+    password: ${DB_CLAVE:${db.clave:}}
     hikari:
       maximum-pool-size: 8
   jpa:
@@ -26,17 +31,17 @@ spring:
 
 guali:
   seguridad:
-    clave-publica: ${JWT_CLAVE_PUBLICA:file:../../deploy/secrets/jwt-publica.pem}
-    clave-privada: ${JWT_CLAVE_PRIVADA:file:../../deploy/secrets/jwt-privada.pem}
+    clave-publica: ${JWT_CLAVE_PUBLICA:${guali.local.clave-publica:}}
+    clave-privada: ${JWT_CLAVE_PRIVADA:${guali.local.clave-privada:}}
     cookie-segura: ${COOKIE_SEGURA:false}
-    token-interno: ${TOKEN_INTERNO:}
-    token-gateway: ${TOKEN_GATEWAY:}
+    token-interno: ${TOKEN_INTERNO:${guali.local.token-interno:}}
+    token-gateway: ${TOKEN_GATEWAY:${guali.local.token-gateway:}}
   admin-inicial:
-    usuario: ${ADMIN_USUARIO:}
-    nombre: ${ADMIN_NOMBRE:Administrador}
-    clave: ${ADMIN_CLAVE:}
+    usuario: ${ADMIN_USUARIO:${admin.usuario:}}
+    nombre: ${ADMIN_NOMBRE:${admin.nombre:Administrador}}
+    clave: ${ADMIN_CLAVE:${admin.clave:}}
   visitas:
-    sal: ${VISITAS_SAL:}
+    sal: ${VISITAS_SAL:${guali.local.visitas-sal:}}
   lecciones:
     url: ${LECCIONES_URL:http://localhost:8081}
 

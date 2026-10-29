@@ -1,0 +1,10 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="2 · lecciones-service" type="Application" factoryName="Application">
+    <option name="MAIN_CLASS_NAME" value="edu.umg.guali.lecciones.LeccionesApplication" />
+    <module name="lecciones-service" />
+    <option name="WORKING_DIRECTORY" value="$MODULE_WORKING_DIR$" />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

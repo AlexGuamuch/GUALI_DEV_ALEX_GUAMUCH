@@ -1,0 +1,5 @@
+org.springframework.boot.EnvironmentPostProcessor=\
+edu.umg.guali.configuracion.ConfiguracionLocal
+
+org.springframework.boot.diagnostics.FailureAnalyzer=\
+edu.umg.guali.configuracion.ConexionMariaDbFailureAnalyzer

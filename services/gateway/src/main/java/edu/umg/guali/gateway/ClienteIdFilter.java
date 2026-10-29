@@ -35,7 +35,8 @@ public class ClienteIdFilter implements GlobalFilter, Ordered {
     public ClienteIdFilter(@Value("${guali.cookie-segura:false}") boolean cookieSegura,
                            @Value("${guali.token-gateway}") String tokenGateway) {
         if (tokenGateway == null || tokenGateway.length() < 24) {
-            throw new IllegalStateException("TOKEN_GATEWAY debe tener al menos 24 caracteres");
+            throw new IllegalStateException("Falta TOKEN_GATEWAY (mínimo 24 caracteres). "
+                    + "Ejecuta: bash deploy/generar-secretos.sh");
         }
         this.cookieSegura = cookieSegura;
         this.tokenGateway = tokenGateway;
