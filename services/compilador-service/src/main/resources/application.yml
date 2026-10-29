@@ -1,0 +1,27 @@
+server:
+  port: 8083
+  shutdown: graceful
+  error:
+    include-message: never
+    include-stacktrace: never
+
+spring:
+  application:
+    name: compilador-service
+
+guali:
+  compilador:
+    # En Docker apunta a /opt/guali-jdk: envoltorios de java/javac con límites de memoria y CPU.
+    jdk-home: ${GUALI_JDK_HOME:${java.home}}
+    tiempo-limite-segundos: ${TIEMPO_LIMITE_SEGUNDOS:5}
+    espera-maxima-segundos: ${ESPERA_MAXIMA_SEGUNDOS:30}
+    salida-maxima-caracteres: 65536
+    aislado: ${COMPILADOR_AISLADO:false}
+  seguridad:
+    token-interno: ${TOKEN_COMPILADOR:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

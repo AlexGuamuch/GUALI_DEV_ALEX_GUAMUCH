@@ -1,0 +1,25 @@
+# Imagen genérica para lecciones-service, admin-service y gateway.
+# Uso: docker build -f deploy/docker/Dockerfile.servicio --build-arg SERVICIO=lecciones-service .
+
+FROM maven:3.9.11-eclipse-temurin-25 AS build
+ARG SERVICIO
+WORKDIR /src
+COPY pom.xml .
+COPY libs/maven-repo libs/maven-repo
+COPY lecciones-ejemplo lecciones-ejemplo
+COPY services services
+RUN --mount=type=cache,target=/root/.m2,sharing=locked \
+    mvn -B -q -pl services/${SERVICIO} -am package -DskipTests \
+    && cp services/${SERVICIO}/target/${SERVICIO}-*.jar /app.jar
+
+FROM eclipse-temurin:25-jre
+ARG SERVICIO
+LABEL org.opencontainers.image.title="guali-${SERVICIO}"
+# Usuario sin privilegios: el proceso nunca corre como root.
+RUN groupadd --system --gid 10001 guali \
+    && useradd --system --uid 10001 --gid guali --no-create-home --shell /usr/sbin/nologin guali
+WORKDIR /app
+COPY --from=build --chown=guali:guali /app.jar /app/app.jar
+USER guali
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/urandom"
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]

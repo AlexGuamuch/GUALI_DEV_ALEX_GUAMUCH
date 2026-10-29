@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acceso de administradores · Codifica con Guali</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <script src="assets/js/shared/theme-init.js"></script>
+  <link rel="stylesheet" href="assets/vendor/phosphor/bold/style.css">
+  <link rel="stylesheet" href="assets/vendor/phosphor/fill/style.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/admin.css">
+  <script type="module" src="assets/js/admin/login.js"></script>
+</head>
+<body class="auth">
+  <main class="auth-wrap">
+    <a class="brand" href="./" aria-label="Codifica con Guali, inicio">
+      <span class="brand-mark" aria-hidden="true">{ }</span>
+      <span class="brand-name">Codifica con <em>Guali</em></span>
+    </a>
+
+    <section class="card auth-card" aria-labelledby="login-title">
+      <span class="eyebrow">Administración</span>
+      <h1 id="login-title">Acceso de administradores</h1>
+      <p>Ingresa con tu usuario para gestionar lecciones, administradores y estadísticas de uso.</p>
+
+      <form class="auth-form" id="login-form" novalidate>
+        <div class="form-alert" id="login-error" role="alert" hidden>
+          <i class="ph-fill ph-warning-circle" aria-hidden="true"></i><span></span>
+        </div>
+
+        <label class="field">
+          <span class="field-label">Usuario</span>
+          <input class="input" type="text" name="username" id="username" autocomplete="username" autocapitalize="off" spellcheck="false" required maxlength="30">
+        </label>
+
+        <label class="field">
+          <span class="field-label">Contraseña</span>
+          <span class="password-field">
+            <input class="input" type="password" name="password" id="password" autocomplete="current-password" required maxlength="128">
+            <button class="icon-btn" type="button" id="toggle-password" aria-label="Mostrar contraseña" aria-pressed="false">
+              <i class="ph-bold ph-eye" aria-hidden="true"></i>
+            </button>
+          </span>
+        </label>
+
+        <button class="btn btn-primary btn-lg btn-block" type="submit" id="login-submit">
+          <i class="ph-bold ph-sign-in" aria-hidden="true"></i>Ingresar
+        </button>
+      </form>
+    </section>
+
+    <p class="auth-foot muted">¿Eres estudiante? No necesitas cuenta. <a href="./">Ir a las lecciones</a></p>
+    <p class="auth-meta"><i class="ph-bold ph-shield-check" aria-hidden="true"></i>Conexión cifrada · la sesión expira tras 30 minutos sin actividad</p>
+  </main>
+  <div class="toast-region" id="toasts" aria-live="polite"></div>
+</body>
+</html>

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 420" font-family="ui-monospace, SFMono-Regular, Consolas, 'Liberation Mono', monospace">
+  <rect width="960" height="420" fill="#F4F4F5"/>
+  <circle cx="812" cy="92" r="68" fill="#F1EBFB"/>
+
+  <!-- Editor -->
+  <rect x="60" y="48" width="580" height="290" rx="12" fill="#FFFFFF" stroke="#E0E0E3"/>
+  <line x1="60" y1="90" x2="640" y2="90" stroke="#EAEAEA"/>
+  <circle cx="86" cy="69" r="6" fill="#E0E0E3"/>
+  <circle cx="106" cy="69" r="6" fill="#E0E0E3"/>
+  <circle cx="126" cy="69" r="6" fill="#E0E0E3"/>
+  <text x="152" y="74" font-size="14" fill="#616161">app25.java</text>
+  <line x1="122" y1="90" x2="122" y2="338" stroke="#EAEAEA"/>
+  <g font-size="15" fill="#9A9A9A" text-anchor="end">
+    <text x="104" y="134">1</text>
+    <text x="104" y="170">2</text>
+    <text x="104" y="206">3</text>
+  </g>
+  <g font-size="21" fill="#111111">
+    <text x="142" y="135"><tspan fill="#6A35BB">void</tspan> main() {</text>
+    <text x="192" y="171">IO.println(<tspan fill="#956400">"¡Hola, Mundo!"</tspan>);</text>
+    <text x="142" y="207">}</text>
+  </g>
+  <rect x="160" y="190" width="2" height="22" fill="#111111"/>
+
+  <!-- Consola -->
+  <rect x="470" y="236" width="430" height="136" rx="12" fill="#FFFFFF" stroke="#E0E0E3"/>
+  <line x1="470" y1="274" x2="900" y2="274" stroke="#EAEAEA"/>
+  <text x="494" y="261" font-size="12" letter-spacing="1.5" fill="#616161">CONSOLA</text>
+  <text x="494" y="308" font-size="16" fill="#9A9A9A">$ java app25</text>
+  <text x="494" y="342" font-size="20" fill="#111111">¡Hola, Mundo!</text>
+  <circle cx="866" cy="336" r="12" fill="#F1EBFB"/>
+  <path d="M860 336l4 4 8-8" fill="none" stroke="#5A2BA3" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

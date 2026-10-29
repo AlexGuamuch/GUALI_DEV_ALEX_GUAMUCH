@@ -1,0 +1,400 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Codifica con Guali</title>
+  <meta name="description" content="Practica Java con lecciones cortas: escribe el código a mano, compílalo y ejecútalo en el navegador.">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <script src="assets/js/shared/theme-init.js"></script>
+  <link rel="stylesheet" href="assets/vendor/phosphor/bold/style.css">
+  <link rel="stylesheet" href="assets/vendor/phosphor/fill/style.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/app.css">
+  <script type="module" src="assets/js/app/main.js"></script>
+</head>
+<body class="app">
+
+  <!-- ===== Barra de menú ===== -->
+  <header class="menubar">
+    <a class="brand" href="./" aria-label="Codifica con Guali, inicio">
+      <span class="brand-mark" aria-hidden="true">{ }</span>
+      <span class="brand-name">Codifica con <em>Guali</em></span>
+    </a>
+
+    <nav class="menubar-nav" aria-label="Menú principal">
+      <div class="menu-root" data-menu>
+        <button class="menu-trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-lecciones">
+          Lecciones <i class="ph-bold ph-caret-down" aria-hidden="true"></i>
+        </button>
+        <div class="menu-popover" id="menu-lecciones" role="menu" hidden>
+          <button class="menu-item" type="button" role="menuitem" data-action="open-lesson">
+            <i class="ph-bold ph-folder-open" aria-hidden="true"></i>Abrir lección
+            <span class="menu-shortcut"><kbd>Ctrl</kbd><kbd>O</kbd></span>
+          </button>
+          <button class="menu-item" type="button" role="menuitem" data-action="close-lesson" data-needs-lesson>
+            <i class="ph-bold ph-x" aria-hidden="true"></i>Cerrar lección
+          </button>
+        </div>
+      </div>
+
+      <div class="menu-root" data-menu>
+        <button class="menu-trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-config">
+          <span class="label-full">Configuración</span><span class="label-short" aria-hidden="true">Config.</span> <i class="ph-bold ph-caret-down" aria-hidden="true"></i>
+        </button>
+        <div class="menu-popover" id="menu-config" role="menu" hidden>
+          <div class="menu-label">Apariencia</div>
+          <div class="menu-row">
+            <span>Tamaño de fuente</span>
+            <span class="stepper">
+              <button type="button" data-action="font-down" aria-label="Disminuir tamaño de fuente"><i class="ph-bold ph-minus" aria-hidden="true"></i></button>
+              <output id="font-size-value" aria-live="polite">15 px</output>
+              <button type="button" data-action="font-up" aria-label="Aumentar tamaño de fuente"><i class="ph-bold ph-plus" aria-hidden="true"></i></button>
+            </span>
+          </div>
+          <div class="menu-row">
+            <span>Tema</span>
+            <span class="segmented" role="group" aria-label="Tema">
+              <button type="button" data-theme-choice="light" aria-pressed="true"><i class="ph-bold ph-sun" aria-hidden="true"></i>Claro</button>
+              <button type="button" data-theme-choice="dark" aria-pressed="false"><i class="ph-bold ph-moon" aria-hidden="true"></i>Oscuro</button>
+            </span>
+          </div>
+
+          <div data-admin-only hidden>
+            <div class="menu-sep"></div>
+            <div class="menu-label"><i class="ph-bold ph-lock-simple" aria-hidden="true"></i>Administración</div>
+            <button class="menu-item" type="button" role="menuitem" data-action="import-bundle">
+              <i class="ph-bold ph-upload-simple" aria-hidden="true"></i>Importar compendio (.zip)
+            </button>
+            <button class="menu-item" type="button" role="menuitem" data-action="export-lessons">
+              <i class="ph-bold ph-download-simple" aria-hidden="true"></i>Exportar lecciones
+            </button>
+            <button class="menu-item is-danger" type="button" role="menuitem" data-action="delete-lesson">
+              <i class="ph-bold ph-trash" aria-hidden="true"></i>Eliminar una lección
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="menu-root" data-menu>
+        <button class="menu-trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-historial">
+          Historial <i class="ph-bold ph-caret-down" aria-hidden="true"></i>
+        </button>
+        <div class="menu-popover" id="menu-historial" role="menu" hidden>
+          <button class="menu-item" type="button" role="menuitem" data-action="show-history">
+            <i class="ph-bold ph-clock-counter-clockwise" aria-hidden="true"></i>Ver historial
+          </button>
+        </div>
+      </div>
+
+      <div class="menu-root" data-menu>
+        <button class="menu-trigger" type="button" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-ayuda">
+          Ayuda <i class="ph-bold ph-caret-down" aria-hidden="true"></i>
+        </button>
+        <div class="menu-popover" id="menu-ayuda" role="menu" hidden>
+          <button class="menu-item" type="button" role="menuitem" data-action="help" data-help-tab="guia">
+            <i class="ph-bold ph-book-open" aria-hidden="true"></i>Cómo usar Guali
+          </button>
+          <button class="menu-item" type="button" role="menuitem" data-action="help" data-help-tab="objetivos">
+            <i class="ph-bold ph-target" aria-hidden="true"></i>Tipos de objetivo
+          </button>
+          <button class="menu-item" type="button" role="menuitem" data-action="help" data-help-tab="atajos">
+            <i class="ph-bold ph-keyboard" aria-hidden="true"></i>Atajos de teclado
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="menubar-end">
+      <a class="btn btn-ghost btn-sm" href="login.html" data-student-only>
+        <i class="ph-bold ph-lock-simple" aria-hidden="true"></i><span class="btn-label">Administración</span>
+      </a>
+      <div class="admin-chip" data-admin-only hidden>
+        <i class="ph-bold ph-shield-check" aria-hidden="true"></i>
+        <span>Admin · <strong id="admin-username">admin</strong></span>
+        <a class="icon-btn" href="admin.html" title="Panel de administración" aria-label="Panel de administración"><i class="ph-bold ph-squares-four" aria-hidden="true"></i></a>
+        <button class="icon-btn" type="button" data-action="logout" title="Cerrar sesión" aria-label="Cerrar sesión"><i class="ph-bold ph-sign-out" aria-hidden="true"></i></button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Título de lección activa ===== -->
+  <section class="lessonbar" aria-label="Lección activa">
+    <span class="lessonbar-label">Lección activa</span>
+    <span class="lessonbar-title is-empty" id="lesson-title">Ninguna lección abierta</span>
+    <div class="lessonbar-meta" id="lesson-meta"></div>
+  </section>
+
+  <div class="mobile-tabs">
+    <div class="segmented" role="tablist" aria-label="Vista">
+      <button type="button" role="tab" aria-selected="true" data-view="lesson"><i class="ph-bold ph-book-open" aria-hidden="true"></i>Lección</button>
+      <button type="button" role="tab" aria-selected="false" data-view="code"><i class="ph-bold ph-code" aria-hidden="true"></i>Código</button>
+    </div>
+  </div>
+
+  <!-- ===== Área de trabajo ===== -->
+  <main class="workspace" id="workspace" data-view="lesson">
+
+    <section class="panel lesson-panel" aria-labelledby="lesson-panel-title">
+      <div class="panel-header">
+        <span class="eyebrow" id="lesson-panel-title"><i class="ph-bold ph-book-open" aria-hidden="true"></i>Panel de lección</span>
+        <div class="panel-header-end">
+          <button class="icon-btn" type="button" data-action="close-lesson" data-needs-lesson title="Cerrar lección" aria-label="Cerrar lección" disabled>
+            <i class="ph-bold ph-x" aria-hidden="true"></i>
+          </button>
+        </div>
+      </div>
+      <div class="panel-body" id="lesson-body">
+        <div class="lesson-empty">
+          <svg viewBox="0 0 200 140" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle class="illus-accent" cx="150" cy="34" r="18" stroke="none"/>
+            <path d="M30 42c28-10 54-7 70 6 16-13 42-16 70-6v70c-28-9-54-6-70 6-16-12-42-15-70-6Z"/>
+            <path d="M100 48v70"/>
+            <path d="M56 66 46 76l10 10M64 88l8-24M80 66l10 10-10 10"/>
+            <path d="M114 66h38M114 76h44M114 86h28M114 96h36"/>
+          </svg>
+          <h2>Todavía no hay una lección abierta</h2>
+          <p>Abre una lección desde el menú Lecciones para ver aquí sus instrucciones y su objetivo.</p>
+          <button class="btn btn-primary" type="button" data-action="open-lesson">
+            <i class="ph-bold ph-folder-open" aria-hidden="true"></i>Abrir lección
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div class="code-column">
+      <section class="panel editor-panel" aria-label="Editor de código">
+        <div class="panel-header">
+          <span class="eyebrow"><i class="ph-bold ph-code" aria-hidden="true"></i>Editor</span>
+          <span class="editor-file" id="editor-file">app25.java</span>
+          <div class="panel-header-end">
+            <span class="editor-flag" title="Para practicar, el código se escribe a mano.">
+              <i class="ph-bold ph-prohibit" aria-hidden="true"></i>Pegar deshabilitado
+            </span>
+          </div>
+        </div>
+        <div class="editor">
+          <div class="editor-gutter" id="editor-gutter" aria-hidden="true"><span class="is-current">1</span></div>
+          <textarea class="editor-input" id="editor" spellcheck="false" autocomplete="off" autocapitalize="off" autocorrect="off" wrap="off"
+                    aria-label="Editor de código Java" placeholder="Escribe aquí tu código Java…"></textarea>
+        </div>
+        <div class="editor-status">
+          <span id="cursor-pos">Ln 1, Col 1</span>
+          <span>Java 25</span>
+          <span>UTF-8</span>
+          <span class="spacer"></span>
+          <span id="char-count">0 caracteres</span>
+        </div>
+      </section>
+
+      <div class="actions">
+        <span class="build-state" id="build-state" data-state="idle">
+          <span class="dot" aria-hidden="true"></span><span id="build-state-text">Sin compilar</span>
+        </span>
+        <div class="actions-buttons">
+          <button class="btn btn-secondary" type="button" id="btn-compile">
+            <i class="ph-bold ph-gear-six" aria-hidden="true"></i>Compilar<span class="btn-kbd">Ctrl ↵</span>
+          </button>
+          <button class="btn btn-primary" type="button" id="btn-run" disabled title="Compila sin errores para habilitar Ejecutar">
+            <i class="ph-fill ph-play" aria-hidden="true"></i>Ejecutar<span class="btn-kbd">Ctrl ⇧ ↵</span>
+          </button>
+        </div>
+      </div>
+
+      <section class="panel console-panel" aria-label="Consola">
+        <div class="panel-header">
+          <span class="eyebrow"><i class="ph-bold ph-terminal-window" aria-hidden="true"></i>Consola</span>
+          <div class="panel-header-end">
+            <button class="icon-btn" type="button" id="btn-clear-console" title="Limpiar consola" aria-label="Limpiar consola">
+              <i class="ph-bold ph-eraser" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+        <pre class="console" id="console" aria-live="polite"><span class="console-placeholder">La salida de la compilación y de la ejecución aparecerá aquí.</span></pre>
+      </section>
+    </div>
+  </main>
+
+  <!-- ===== Diálogo: abrir lección ===== -->
+  <dialog class="dialog" id="dlg-open-lesson" aria-labelledby="dlg-open-title">
+    <div class="dialog-header">
+      <div>
+        <h2 class="dialog-title" id="dlg-open-title">Abrir lección</h2>
+        <p class="dialog-subtitle">Elige una lección para cargarla en el panel de lección activa.</p>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Cerrar"><i class="ph-bold ph-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="dialog-body">
+      <label class="input-group">
+        <span class="sr-only">Buscar lección</span>
+        <i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i>
+        <input class="input" type="search" id="lesson-search" placeholder="Buscar por nombre…" autocomplete="off">
+      </label>
+      <ul class="lesson-list" id="lesson-list" role="listbox" aria-label="Lecciones disponibles"></ul>
+    </div>
+    <div class="dialog-footer">
+      <span class="spacer muted" id="lesson-count"></span>
+      <button class="btn btn-secondary" type="button" data-close>Cancelar</button>
+      <button class="btn btn-primary" type="button" id="btn-open-selected" disabled>
+        <i class="ph-bold ph-folder-open" aria-hidden="true"></i>Abrir
+      </button>
+    </div>
+  </dialog>
+
+  <!-- ===== Diálogo: historial de sesión ===== -->
+  <dialog class="dialog dialog-lg" id="dlg-history" aria-labelledby="dlg-history-title">
+    <div class="dialog-header">
+      <div>
+        <h2 class="dialog-title" id="dlg-history-title">Historial de sesión</h2>
+        <p class="dialog-subtitle">Todos tus intentos en este navegador, incluidos los que no se completaron.</p>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Cerrar"><i class="ph-bold ph-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="dialog-body">
+      <div class="history-summary" id="history-summary"></div>
+      <div class="table-wrap history-table">
+        <table class="table">
+          <thead>
+            <tr><th scope="col">Lección</th><th scope="col">Fecha inicio</th><th scope="col">Fecha final</th><th scope="col">Estado</th></tr>
+          </thead>
+          <tbody id="history-rows"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-primary" type="button" data-close>Cerrar</button>
+    </div>
+  </dialog>
+
+  <!-- ===== Diálogo: ayuda ===== -->
+  <dialog class="dialog dialog-lg" id="dlg-help" aria-labelledby="dlg-help-title">
+    <div class="dialog-header">
+      <div>
+        <h2 class="dialog-title" id="dlg-help-title">Ayuda</h2>
+        <p class="dialog-subtitle">Cómo practicar con Guali, paso a paso.</p>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Cerrar"><i class="ph-bold ph-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="dialog-body">
+      <div class="segmented help-tabs" role="tablist" aria-label="Secciones de ayuda">
+        <button type="button" role="tab" data-help-tab="guia" aria-selected="true">Cómo usar</button>
+        <button type="button" role="tab" data-help-tab="objetivos" aria-selected="false">Objetivos</button>
+        <button type="button" role="tab" data-help-tab="atajos" aria-selected="false">Atajos</button>
+      </div>
+
+      <div data-help-panel="guia">
+        <div class="help-grid">
+          <div class="help-tile"><span class="eyebrow">Paso 1</span><strong>Abre una lección</strong>Menú Lecciones → Abrir lección. Sus instrucciones aparecen en el panel izquierdo.</div>
+          <div class="help-tile"><span class="eyebrow">Paso 2</span><strong>Escribe el código a mano</strong>Copia el ejemplo tecleándolo en el editor. Pegar está deshabilitado a propósito: escribir te ayuda a memorizar la sintaxis.</div>
+          <div class="help-tile"><span class="eyebrow">Paso 3</span><strong>Compila y lee la consola</strong>Si hay errores, la consola te dice la línea y el motivo. Corrígelo y vuelve a compilar.</div>
+          <div class="help-tile"><span class="eyebrow">Paso 4</span><strong>Ejecuta tu programa</strong>Ejecutar se habilita cuando la última compilación no tuvo errores. Revisa tu progreso en Historial.</div>
+        </div>
+        <div class="accordion">
+          <details>
+            <summary>¿Necesito crear una cuenta?</summary>
+            <div class="accordion-body">No. Los estudiantes usan Guali sin registrarse. Tu historial y tus preferencias se guardan para este navegador.</div>
+          </details>
+          <details>
+            <summary>¿Puedo leer datos con Scanner?</summary>
+            <div class="accordion-body">No. El programa no recibe entrada del teclado mientras se ejecuta. Escribe los valores directamente en el código.</div>
+          </details>
+          <details>
+            <summary>¿Cuánto tiempo puede tardar mi programa?</summary>
+            <div class="accordion-body">Hasta 5 segundos. Si se pasa, por ejemplo por un ciclo infinito, se detiene y la consola te lo indica.</div>
+          </details>
+          <details>
+            <summary>¿Qué versión de Java se usa?</summary>
+            <div class="accordion-body">Java 25. Puedes escribir la forma compacta <code>void main() { IO.println("Hola"); }</code> o una clase completa con <code>public static void main</code>.</div>
+          </details>
+        </div>
+      </div>
+
+      <div data-help-panel="objetivos" hidden>
+        <div class="help-grid">
+          <div class="help-tile"><span class="badge badge-danger no-dot">Compilar con error</span><strong>Reconocer errores</strong>Presiona Compilar y consigue que el compilador reporte al menos un error. Aprendes a leer sus mensajes.</div>
+          <div class="help-tile"><span class="badge badge-success no-dot">Compilar exitoso</span><strong>Sintaxis correcta</strong>Presiona Compilar y consigue 0 errores.</div>
+          <div class="help-tile"><span class="badge badge-warning no-dot">Ejecutar con error</span><strong>Errores en ejecución</strong>Compila sin errores y ejecuta hasta que el programa falle, por ejemplo con una división entre cero.</div>
+          <div class="help-tile"><span class="badge badge-info no-dot">Ejecutar exitoso</span><strong>Ciclo completo</strong>Escribe, compila y ejecuta hasta que el programa termine sin errores.</div>
+        </div>
+      </div>
+
+      <div data-help-panel="atajos" hidden>
+        <ul class="shortcut-list">
+          <li><span>Compilar</span><span><kbd>Ctrl</kbd><kbd>Enter</kbd></span></li>
+          <li><span>Ejecutar</span><span><kbd>Ctrl</kbd><kbd>Shift</kbd><kbd>Enter</kbd></span></li>
+          <li><span>Abrir lección</span><span><kbd>Ctrl</kbd><kbd>O</kbd></span></li>
+          <li><span>Insertar sangría (4 espacios)</span><span><kbd>Tab</kbd></span></li>
+          <li><span>Quitar sangría</span><span><kbd>Shift</kbd><kbd>Tab</kbd></span></li>
+          <li><span>Salir del editor con el teclado</span><span><kbd>Esc</kbd><kbd>Tab</kbd></span></li>
+        </ul>
+      </div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-primary" type="button" data-close>Entendido</button>
+    </div>
+  </dialog>
+
+  <!-- ===== Diálogo: importar compendio (admin) ===== -->
+  <dialog class="dialog" id="dlg-import" aria-labelledby="dlg-import-title">
+    <div class="dialog-header">
+      <div>
+        <h2 class="dialog-title" id="dlg-import-title">Importar compendio</h2>
+        <p class="dialog-subtitle">Sube un .zip con una o más lecciones. Se guardan en la base de datos.</p>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Cerrar"><i class="ph-bold ph-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="dialog-body">
+      <label class="dropzone" id="dropzone">
+        <i class="ph-bold ph-file-zip" aria-hidden="true"></i>
+        <strong>Arrastra el archivo aquí o haz clic para elegirlo</strong>
+        <span>Solo .zip · máximo 10 MB</span>
+        <input class="sr-only" type="file" id="bundle-file" accept=".zip,application/zip">
+      </label>
+      <div class="file-pill" id="bundle-picked" hidden>
+        <i class="ph-bold ph-file-zip" aria-hidden="true"></i><span id="bundle-name"></span><span class="muted" id="bundle-size"></span>
+      </div>
+      <div class="tree">lecciones.zip
+└── leccion-01-hola-mundo/
+    ├── leccion.md     <span class="muted">instrucciones en markdown</span>
+    ├── config.txt     <span class="muted">objetivo=EJECUTAR_EXITOSO</span>
+    └── imagen.png     <span class="muted">opcional</span></div>
+      <div class="import-result" id="import-result" aria-live="polite" hidden></div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-secondary" type="button" data-close>Cancelar</button>
+      <button class="btn btn-primary" type="button" id="btn-import" disabled>
+        <i class="ph-bold ph-upload-simple" aria-hidden="true"></i>Importar
+      </button>
+    </div>
+  </dialog>
+
+  <!-- ===== Diálogo: eliminar lección (admin) ===== -->
+  <dialog class="dialog" id="dlg-delete" aria-labelledby="dlg-delete-title">
+    <div class="dialog-header">
+      <div>
+        <h2 class="dialog-title" id="dlg-delete-title">Eliminar una lección</h2>
+        <p class="dialog-subtitle">La lección y sus imágenes se borran de la base de datos. El historial se conserva.</p>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Cerrar"><i class="ph-bold ph-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="dialog-body">
+      <label class="field">
+        <span class="field-label">Lección</span>
+        <select class="select" id="delete-lesson-select"></select>
+      </label>
+      <label class="check confirm-row">
+        <input type="checkbox" id="delete-confirm">
+        Entiendo que esta acción no se puede deshacer.
+      </label>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-secondary" type="button" data-close>Cancelar</button>
+      <button class="btn btn-danger" type="button" id="btn-delete" disabled>
+        <i class="ph-bold ph-trash" aria-hidden="true"></i>Eliminar
+      </button>
+    </div>
+  </dialog>
+
+  <div class="toast-region" id="toasts" aria-live="polite"></div>
+</body>
+</html>

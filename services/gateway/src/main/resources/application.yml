@@ -1,0 +1,34 @@
+server:
+  port: 8080
+  shutdown: graceful
+
+spring:
+  application:
+    name: gateway
+  cloud:
+    gateway:
+      server:
+        webflux:
+          # Solo se publican rutas /api/**. Las rutas /interno/** y /actuator/** de los servicios no son alcanzables.
+          routes:
+            - id: admin
+              uri: ${ADMIN_URL:http://localhost:8082}
+              predicates:
+                - Path=/api/auth/**,/api/visitas,/api/admin/usuarios/**,/api/admin/estadisticas/**
+            - id: lecciones
+              uri: ${LECCIONES_URL:http://localhost:8081}
+              predicates:
+                - Path=/api/lecciones/**,/api/intentos/**,/api/codigo/**,/api/preferencias,/api/admin/lecciones/**
+          httpclient:
+            connect-timeout: 3000
+            response-timeout: 60s
+
+guali:
+  cookie-segura: ${COOKIE_SEGURA:false}
+  token-gateway: ${TOKEN_GATEWAY:}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

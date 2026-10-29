@@ -1,0 +1,11 @@
+**/target
+.git
+.idea
+.vscode
+.claude
+.env
+deploy/secrets
+frontend
+docs
+tools
+*.zip

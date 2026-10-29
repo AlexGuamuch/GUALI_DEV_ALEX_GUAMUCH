@@ -1,0 +1,12 @@
+# Ajustes de producción. Uso:
+#   docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
+#
+# - nginx publica el puerto 443 con el certificado de origen de Cloudflare.
+# - En .env: COOKIE_SEGURA=true y PUERTO_HTTP=127.0.0.1:8080 (HTTP solo accesible desde el propio servidor).
+
+services:
+  nginx:
+    volumes:
+      - ./deploy/nginx/tls:/etc/nginx/tls:ro
+    ports:
+      - "443:8443"

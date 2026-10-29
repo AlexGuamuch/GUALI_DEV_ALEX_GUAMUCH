@@ -1,0 +1,47 @@
+server:
+  port: 8082
+  shutdown: graceful
+  forward-headers-strategy: framework
+  error:
+    include-message: never
+    include-stacktrace: never
+
+spring:
+  application:
+    name: admin-service
+  datasource:
+    url: ${DB_URL:jdbc:mariadb://localhost:3306/guali_admin}
+    username: ${DB_USUARIO:guali_admin}
+    password: ${DB_CLAVE:}
+    hikari:
+      maximum-pool-size: 8
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate.jdbc.time_zone: UTC
+  flyway:
+    enabled: true
+
+guali:
+  seguridad:
+    clave-publica: ${JWT_CLAVE_PUBLICA:file:../../deploy/secrets/jwt-publica.pem}
+    clave-privada: ${JWT_CLAVE_PRIVADA:file:../../deploy/secrets/jwt-privada.pem}
+    cookie-segura: ${COOKIE_SEGURA:false}
+    token-interno: ${TOKEN_INTERNO:}
+    token-gateway: ${TOKEN_GATEWAY:}
+  admin-inicial:
+    usuario: ${ADMIN_USUARIO:}
+    nombre: ${ADMIN_NOMBRE:Administrador}
+    clave: ${ADMIN_CLAVE:}
+  visitas:
+    sal: ${VISITAS_SAL:}
+  lecciones:
+    url: ${LECCIONES_URL:http://localhost:8081}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health

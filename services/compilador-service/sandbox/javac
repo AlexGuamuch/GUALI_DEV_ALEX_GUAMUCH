@@ -1,0 +1,9 @@
+#!/bin/sh
+# Envoltorio de "javac": entorno vacío, 20 s de CPU y 256 MB de heap como máximo por compilación.
+ulimit -t 20 2>/dev/null
+ulimit -f 20480 2>/dev/null
+exec env -i PATH=/usr/bin:/bin LANG=C.UTF-8 HOME=/tmp \
+  /opt/java/openjdk/bin/javac \
+  -J-Xmx256m -J-XX:+UseSerialGC -J-XX:TieredStopAtLevel=1 -J-XX:-UsePerfData \
+  -J-Dfile.encoding=UTF-8 -J-Dstdout.encoding=UTF-8 -J-Dstderr.encoding=UTF-8 \
+  "$@"

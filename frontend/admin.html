@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="es" data-theme="light">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Administración · Codifica con Guali</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" href="assets/img/favicon.svg" type="image/svg+xml">
+  <script src="assets/js/shared/theme-init.js"></script>
+  <link rel="stylesheet" href="assets/vendor/phosphor/bold/style.css">
+  <link rel="stylesheet" href="assets/vendor/phosphor/fill/style.css">
+  <link rel="stylesheet" href="assets/css/base.css">
+  <link rel="stylesheet" href="assets/css/admin.css">
+  <script type="module" src="assets/js/admin/main.js"></script>
+</head>
+<body class="admin">
+
+  <aside class="sidebar" aria-label="Navegación de administración">
+    <a class="brand" href="./" aria-label="Codifica con Guali, inicio">
+      <span class="brand-mark" aria-hidden="true">{ }</span>
+      <span class="brand-name">Codifica con <em>Guali</em></span>
+    </a>
+
+    <nav class="side-section" aria-label="Módulos">
+      <span class="eyebrow">Administración</span>
+      <a class="side-link" href="#estadisticas" data-route="estadisticas"><i class="ph-bold ph-chart-bar" aria-hidden="true"></i>Estadísticas</a>
+      <a class="side-link" href="#usuarios" data-route="usuarios"><i class="ph-bold ph-users-three" aria-hidden="true"></i>Administradores</a>
+      <a class="side-link" href="#lecciones" data-route="lecciones"><i class="ph-bold ph-books" aria-hidden="true"></i>Lecciones</a>
+    </nav>
+
+    <div class="sidebar-foot">
+      <a class="side-link" href="./"><i class="ph-bold ph-arrow-square-out" aria-hidden="true"></i>Ir a la aplicación</a>
+      <span class="segmented" role="group" aria-label="Tema">
+        <button type="button" data-theme-choice="light" aria-pressed="true"><i class="ph-bold ph-sun" aria-hidden="true"></i>Claro</button>
+        <button type="button" data-theme-choice="dark" aria-pressed="false"><i class="ph-bold ph-moon" aria-hidden="true"></i>Oscuro</button>
+      </span>
+      <div class="user-card">
+        <span class="avatar" id="me-initials">AD</span>
+        <span class="user-card-text">
+          <strong id="me-name">Administrador</strong>
+          <span id="me-username">admin</span>
+        </span>
+        <button class="icon-btn" type="button" data-action="logout" title="Cerrar sesión" aria-label="Cerrar sesión">
+          <i class="ph-bold ph-sign-out" aria-hidden="true"></i>
+        </button>
+      </div>
+    </div>
+  </aside>
+
+  <div class="admin-shell">
+    <header class="mobile-topbar">
+      <div class="mobile-topbar-row">
+        <a class="brand" href="./"><span class="brand-mark" aria-hidden="true">{ }</span><span>Administración</span></a>
+        <button class="icon-btn" type="button" data-action="logout" aria-label="Cerrar sesión"><i class="ph-bold ph-sign-out" aria-hidden="true"></i></button>
+      </div>
+      <nav class="segmented" aria-label="Módulos">
+        <a href="#estadisticas" data-route="estadisticas"><i class="ph-bold ph-chart-bar" aria-hidden="true"></i>Estadísticas</a>
+        <a href="#usuarios" data-route="usuarios"><i class="ph-bold ph-users-three" aria-hidden="true"></i>Admins</a>
+        <a href="#lecciones" data-route="lecciones"><i class="ph-bold ph-books" aria-hidden="true"></i>Lecciones</a>
+      </nav>
+    </header>
+
+    <main class="admin-main">
+
+      <!-- ===== Estadísticas ===== -->
+      <section class="admin-page" data-page="estadisticas" aria-labelledby="stats-title" hidden>
+        <header class="page-header">
+          <div>
+            <span class="eyebrow">Módulo de estadísticas</span>
+            <h1 id="stats-title">Uso de la plataforma</h1>
+            <p>Cuántas personas visitan Codifica con Guali en el intervalo que elijas, y qué lecciones practican.</p>
+          </div>
+        </header>
+
+        <div class="filters" role="group" aria-label="Intervalo de tiempo">
+          <span class="segmented" role="group" aria-label="Intervalo rápido">
+            <button type="button" data-range="7" aria-pressed="false">7 días</button>
+            <button type="button" data-range="30" aria-pressed="true">30 días</button>
+            <button type="button" data-range="90" aria-pressed="false">90 días</button>
+          </span>
+          <label class="field">
+            <span class="field-label">Desde</span>
+            <input class="input" type="date" id="range-from">
+          </label>
+          <label class="field">
+            <span class="field-label">Hasta</span>
+            <input class="input" type="date" id="range-to">
+          </label>
+          <button class="btn btn-secondary" type="button" id="range-apply">Aplicar</button>
+          <span class="filters-note" id="range-note"></span>
+        </div>
+
+        <div class="stats-grid">
+          <div class="card stat-tile is-hero">
+            <span class="stat-label">Visitantes únicos</span>
+            <span class="stat-value" id="kpi-visitors">—</span>
+            <span class="stat-sub">Navegadores distintos en el intervalo</span>
+          </div>
+          <div class="card stat-tile">
+            <span class="stat-label">Visitas</span>
+            <span class="stat-value" id="kpi-visits">—</span>
+            <span class="stat-sub">Cargas de la aplicación</span>
+          </div>
+          <div class="card stat-tile">
+            <span class="stat-label">Lecciones abiertas</span>
+            <span class="stat-value" id="kpi-opened">—</span>
+            <span class="stat-sub">Intentos registrados en historial</span>
+          </div>
+          <div class="card stat-tile">
+            <span class="stat-label">Lecciones completadas</span>
+            <span class="stat-value" id="kpi-completed">—</span>
+            <span class="stat-sub" id="kpi-rate">—</span>
+          </div>
+
+          <section class="card chart-card" aria-labelledby="chart-title">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title" id="chart-title">Visitantes únicos por día</h2>
+                <p class="card-sub" id="chart-sub">Pasa el cursor o usa las flechas para ver cada día</p>
+              </div>
+              <span class="segmented" role="group" aria-label="Vista">
+                <button type="button" data-chart-view="chart" aria-pressed="true"><i class="ph-bold ph-chart-bar" aria-hidden="true"></i>Gráfica</button>
+                <button type="button" data-chart-view="table" aria-pressed="false"><i class="ph-bold ph-table" aria-hidden="true"></i>Tabla</button>
+              </span>
+            </div>
+            <div class="card-body">
+              <div class="chart" id="visitors-chart" tabindex="0" role="img" aria-label="Gráfica de visitantes únicos por día"></div>
+              <div class="table-wrap chart-table" id="visitors-table" hidden>
+                <table class="table">
+                  <thead><tr><th scope="col">Fecha</th><th scope="col">Visitantes únicos</th><th scope="col">Visitas</th><th scope="col">Abiertas</th><th scope="col">Completadas</th></tr></thead>
+                  <tbody id="visitors-rows"></tbody>
+                </table>
+              </div>
+            </div>
+          </section>
+
+          <section class="card top-card" aria-labelledby="top-title">
+            <div class="card-header">
+              <div>
+                <h2 class="card-title" id="top-title">Lecciones más abiertas</h2>
+                <p class="card-sub">Intentos en el intervalo</p>
+              </div>
+            </div>
+            <div class="card-body">
+              <ol class="rank-list" id="top-lessons"></ol>
+            </div>
+          </section>
+        </div>
+      </section>
+
+      <!-- ===== Administradores ===== -->
+      <section class="admin-page" data-page="usuarios" aria-labelledby="users-title" hidden>
+        <header class="page-header">
+          <div>
+            <span class="eyebrow">Módulo de usuarios</span>
+            <h1 id="users-title">Administradores</h1>
+            <p>Crea, modifica o elimina las cuentas que pueden importar, exportar y eliminar lecciones.</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-primary" type="button" id="btn-new-user">
+              <i class="ph-bold ph-user-plus" aria-hidden="true"></i>Nuevo administrador
+            </button>
+          </div>
+        </header>
+
+        <div class="toolbar">
+          <label class="input-group">
+            <span class="sr-only">Buscar administrador</span>
+            <i class="ph-bold ph-magnifying-glass" aria-hidden="true"></i>
+            <input class="input" type="search" id="user-search" placeholder="Buscar por nombre o usuario…" autocomplete="off">
+          </label>
+          <span class="muted" id="user-count"></span>
+        </div>
+
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">Administrador</th>
+                <th scope="col">Estado</th>
+                <th scope="col" class="hide-sm">Último acceso</th>
+                <th scope="col" class="hide-sm">Creado</th>
+                <th scope="col" class="cell-actions"><span class="sr-only">Acciones</span></th>
+              </tr>
+            </thead>
+            <tbody id="user-rows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== Lecciones ===== -->
+      <section class="admin-page" data-page="lecciones" aria-labelledby="lessons-title" hidden>
+        <header class="page-header">
+          <div>
+            <span class="eyebrow">Módulo de lecciones</span>
+            <h1 id="lessons-title">Lecciones</h1>
+            <p>Las lecciones se guardan en la base de datos. Importa un compendio .zip o exporta todas para respaldo.</p>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-secondary" type="button" id="btn-export">
+              <i class="ph-bold ph-download-simple" aria-hidden="true"></i>Exportar .zip
+            </button>
+            <button class="btn btn-primary" type="button" id="btn-import-open">
+              <i class="ph-bold ph-upload-simple" aria-hidden="true"></i>Importar compendio
+            </button>
+          </div>
+        </header>
+
+        <div class="table-wrap">
+          <table class="table">
+            <thead>
+              <tr>
+                <th scope="col">#</th>
+                <th scope="col">Lección</th>
+                <th scope="col">Objetivo</th>
+                <th scope="col" class="hide-sm">Imágenes</th>
+                <th scope="col" class="hide-sm">Última importación</th>
+                <th scope="col" class="cell-actions"><span class="sr-only">Acciones</span></th>
+              </tr>
+            </thead>
+            <tbody id="lesson-rows"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ===== Diálogo: crear / editar administrador ===== -->
+  <dialog class="dialog" id="dlg-user" aria-labelledby="dlg-user-title">
+    <form id="user-form" novalidate>
+      <div class="dialog-header">
+        <div>
+          <h2 class="dialog-title" id="dlg-user-title">Nuevo administrador</h2>
+          <p class="dialog-subtitle" id="dlg-user-sub">Podrá iniciar sesión y gestionar lecciones y usuarios.</p>
+        </div>
+        <button class="icon-btn" type="button" data-close aria-label="Cerrar"><i class="ph-bold ph-x" aria-hidden="true"></i></button>
+      </div>
+      <div class="dialog-body form-grid">
+        <label class="field">
+          <span class="field-label">Nombre completo</span>
+          <input class="input" type="text" name="fullName" required maxlength="80" autocomplete="off">
+          <span class="field-error" data-error="fullName" hidden></span>
+        </label>
+        <label class="field">
+          <span class="field-label">Usuario</span>
+          <input class="input mono" type="text" name="username" required maxlength="30" autocomplete="off" autocapitalize="off" spellcheck="false">
+          <span class="field-hint">3 a 30 caracteres: minúsculas, números, punto, guion o guion bajo.</span>
+          <span class="field-error" data-error="username" hidden></span>
+        </label>
+        <div class="form-row">
+          <label class="field">
+            <span class="field-label">Contraseña</span>
+            <input class="input" type="password" name="password" maxlength="128" autocomplete="new-password">
+            <span class="field-error" data-error="password" hidden></span>
+          </label>
+          <label class="field">
+            <span class="field-label">Confirmar contraseña</span>
+            <input class="input" type="password" name="confirm" maxlength="128" autocomplete="new-password">
+            <span class="field-error" data-error="confirm" hidden></span>
+          </label>
+        </div>
+        <span class="field-hint" id="password-hint">Mínimo 12 caracteres, con mayúscula, minúscula y número.</span>
+        <label class="check">
+          <input type="checkbox" name="active" checked>
+          Cuenta activa (puede iniciar sesión)
+        </label>
+      </div>
+      <div class="dialog-footer">
+        <button class="btn btn-secondary" type="button" data-close>Cancelar</button>
+        <button class="btn btn-primary" type="submit" id="btn-save-user"><i class="ph-bold ph-check" aria-hidden="true"></i>Guardar</button>
+      </div>
+    </form>
+  </dialog>
+
+  <!-- ===== Diálogo: confirmar eliminación ===== -->
+  <dialog class="dialog" id="dlg-confirm" aria-labelledby="dlg-confirm-title">
+    <div class="dialog-header">
+      <div>
+        <h2 class="dialog-title" id="dlg-confirm-title">¿Eliminar?</h2>
+        <p class="dialog-subtitle" id="dlg-confirm-text"></p>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Cerrar"><i class="ph-bold ph-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-secondary" type="button" data-close>Cancelar</button>
+      <button class="btn btn-danger" type="button" id="btn-confirm"><i class="ph-bold ph-trash" aria-hidden="true"></i>Eliminar</button>
+    </div>
+  </dialog>
+
+  <!-- ===== Diálogo: importar compendio ===== -->
+  <dialog class="dialog" id="dlg-import" aria-labelledby="dlg-import-title">
+    <div class="dialog-header">
+      <div>
+        <h2 class="dialog-title" id="dlg-import-title">Importar compendio</h2>
+        <p class="dialog-subtitle">Sube un .zip con una o más lecciones. Se guardan en la base de datos.</p>
+      </div>
+      <button class="icon-btn" type="button" data-close aria-label="Cerrar"><i class="ph-bold ph-x" aria-hidden="true"></i></button>
+    </div>
+    <div class="dialog-body">
+      <label class="dropzone" id="dropzone">
+        <i class="ph-bold ph-file-zip" aria-hidden="true"></i>
+        <strong>Arrastra el archivo aquí o haz clic para elegirlo</strong>
+        <span>Solo .zip · máximo 10 MB</span>
+        <input class="sr-only" type="file" id="bundle-file" accept=".zip,application/zip">
+      </label>
+      <div class="file-pill" id="bundle-picked" hidden>
+        <i class="ph-bold ph-file-zip" aria-hidden="true"></i><span id="bundle-name"></span><span class="muted" id="bundle-size"></span>
+      </div>
+      <div class="tree">lecciones.zip
+└── leccion-01-hola-mundo/
+    ├── leccion.md     <span class="muted">instrucciones en markdown</span>
+    ├── config.txt     <span class="muted">objetivo=EJECUTAR_EXITOSO</span>
+    └── imagen.png     <span class="muted">opcional</span></div>
+      <div class="import-result" id="import-result" aria-live="polite" hidden></div>
+    </div>
+    <div class="dialog-footer">
+      <button class="btn btn-secondary" type="button" data-close>Cancelar</button>
+      <button class="btn btn-primary" type="button" id="btn-import" disabled>
+        <i class="ph-bold ph-upload-simple" aria-hidden="true"></i>Importar
+      </button>
+    </div>
+  </dialog>
+
+  <div class="toast-region" id="toasts" aria-live="polite"></div>
+</body>
+</html>

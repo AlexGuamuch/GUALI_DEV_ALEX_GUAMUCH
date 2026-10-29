@@ -1,0 +1,198 @@
+# Codifica con Guali — despliegue con Docker Compose.
+#
+#   Internet → Cloudflare (WAF, DDoS, CDN, TLS) → nginx → gateway → microservicios → MariaDB
+#
+# Redes:
+#   borde       nginx y gateway (única red con salida; solo nginx publica un puerto)
+#   servicios   gateway, lecciones y admin (interna, sin salida a Internet)
+#   datos       lecciones, admin y MariaDB (interna)
+#   compilador  lecciones y compilador (interna): el código de los estudiantes no ve la base de datos
+#               ni puede salir a Internet.
+#
+# Primer uso:  bash deploy/generar-secretos.sh   y luego   docker compose up -d --build
+
+name: guali
+
+x-servicio-java: &servicio-java
+  restart: unless-stopped
+  read_only: true
+  tmpfs:
+    - /tmp:size=64m
+  cap_drop: [ALL]
+  security_opt:
+    - no-new-privileges:true
+  logging:
+    driver: json-file
+    options:
+      max-size: "10m"
+      max-file: "3"
+
+services:
+
+  mariadb:
+    image: mariadb:11.8
+    restart: unless-stopped
+    environment:
+      MARIADB_ROOT_PASSWORD: ${DB_CLAVE_ROOT:?Ejecuta deploy/generar-secretos.sh}
+      DB_CLAVE_LECCIONES: ${DB_CLAVE_LECCIONES:?}
+      DB_CLAVE_ADMIN: ${DB_CLAVE_ADMIN:?}
+      MARIADB_AUTO_UPGRADE: "1"
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--max-allowed-packet=32M"]
+    volumes:
+      - datos-mariadb:/var/lib/mysql
+      - ./deploy/mariadb/init:/docker-entrypoint-initdb.d:ro
+    networks: [datos]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    mem_limit: 512m
+
+  compilador:
+    <<: *servicio-java
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.compilador
+    image: guali/compilador-service:2.0.0
+    # init (tini) recoge los procesos huérfanos que deje un programa del estudiante.
+    init: true
+    environment:
+      TOKEN_COMPILADOR: ${TOKEN_COMPILADOR:?Ejecuta deploy/generar-secretos.sh}
+      TIEMPO_LIMITE_SEGUNDOS: "5"
+      COMPILADOR_AISLADO: "true"
+    networks: [compilador]
+    pids_limit: 256
+    mem_limit: 768m
+    cpus: 1.0
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8083 && printf 'GET /actuator/health HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 40s
+
+  lecciones:
+    <<: *servicio-java
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.servicio
+      args:
+        SERVICIO: lecciones-service
+    image: guali/lecciones-service:2.0.0
+    environment:
+      DB_URL: jdbc:mariadb://mariadb:3306/guali_lecciones
+      DB_USUARIO: guali_lecciones
+      DB_CLAVE: ${DB_CLAVE_LECCIONES:?}
+      JWT_CLAVE_PUBLICA: file:/run/secrets/jwt-publica
+      TOKEN_INTERNO: ${TOKEN_INTERNO:?}
+      TOKEN_COMPILADOR: ${TOKEN_COMPILADOR:?}
+      TOKEN_GATEWAY: ${TOKEN_GATEWAY:?}
+      COMPILADOR_URL: http://compilador:8083
+      COOKIE_SEGURA: ${COOKIE_SEGURA:-false}
+      LECCIONES_SEMILLA: "true"
+    secrets: [jwt-publica]
+    networks: [servicios, datos, compilador]
+    depends_on:
+      mariadb:
+        condition: service_healthy
+      compilador:
+        condition: service_started
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8081 && printf 'GET /actuator/health HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  admin:
+    <<: *servicio-java
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.servicio
+      args:
+        SERVICIO: admin-service
+    image: guali/admin-service:2.0.0
+    environment:
+      DB_URL: jdbc:mariadb://mariadb:3306/guali_admin
+      DB_USUARIO: guali_admin
+      DB_CLAVE: ${DB_CLAVE_ADMIN:?}
+      JWT_CLAVE_PUBLICA: file:/run/secrets/jwt-publica
+      JWT_CLAVE_PRIVADA: file:/run/secrets/jwt-privada
+      TOKEN_INTERNO: ${TOKEN_INTERNO:?}
+      TOKEN_GATEWAY: ${TOKEN_GATEWAY:?}
+      LECCIONES_URL: http://lecciones:8081
+      COOKIE_SEGURA: ${COOKIE_SEGURA:-false}
+      VISITAS_SAL: ${VISITAS_SAL:?}
+      ADMIN_USUARIO: ${ADMIN_USUARIO:-}
+      ADMIN_NOMBRE: ${ADMIN_NOMBRE:-Administrador}
+      ADMIN_CLAVE: ${ADMIN_CLAVE:-}
+    secrets: [jwt-publica, jwt-privada]
+    networks: [servicios, datos]
+    depends_on:
+      mariadb:
+        condition: service_healthy
+    mem_limit: 512m
+    healthcheck:
+      test: ["CMD", "bash", "-c", "exec 3<>/dev/tcp/127.0.0.1/8082 && printf 'GET /actuator/health HTTP/1.0\\r\\n\\r\\n' >&3 && grep -q UP <&3"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+  gateway:
+    <<: *servicio-java
+    build:
+      context: .
+      dockerfile: deploy/docker/Dockerfile.servicio
+      args:
+        SERVICIO: gateway
+    image: guali/gateway:2.0.0
+    environment:
+      LECCIONES_URL: http://lecciones:8081
+      ADMIN_URL: http://admin:8082
+      COOKIE_SEGURA: ${COOKIE_SEGURA:-false}
+      TOKEN_GATEWAY: ${TOKEN_GATEWAY:?}
+    networks: [borde, servicios]
+    depends_on: [lecciones, admin]
+    mem_limit: 384m
+
+  nginx:
+    image: nginx:1.29-alpine
+    restart: unless-stopped
+    user: "101:101"
+    read_only: true
+    tmpfs:
+      - /tmp:size=32m
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ./deploy/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./deploy/nginx/guali:/etc/nginx/guali:ro
+      - ./frontend:/usr/share/nginx/html:ro
+    ports:
+      - "${PUERTO_HTTP:-8080}:8080"
+    networks: [borde]
+    depends_on: [gateway]
+    mem_limit: 128m
+
+networks:
+  borde: {}
+  servicios:
+    internal: true
+  datos:
+    internal: true
+  compilador:
+    internal: true
+
+volumes:
+  datos-mariadb: {}
+
+secrets:
+  jwt-publica:
+    file: ./deploy/secrets/jwt-publica.pem
+  jwt-privada:
+    file: ./deploy/secrets/jwt-privada.pem

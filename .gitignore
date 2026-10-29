@@ -1,0 +1,20 @@
+# Build
+target/
+*.class
+*.log
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# Secrets (nunca subir)
+.env
+*.env.local
+deploy/secrets/
+deploy/nginx/tls/*.pem
+deploy/nginx/tls/*.key
+
+# OS
+.DS_Store
+Thumbs.db

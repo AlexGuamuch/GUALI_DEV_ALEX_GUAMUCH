@@ -1,0 +1,13 @@
+#!/bin/sh
+# Envoltorio de "java" para los programas de los estudiantes.
+# - Entorno vacío (env -i): el programa no ve variables del servicio.
+# - Límites: 10 s de CPU, archivos de hasta 10 MB, 128 descriptores, 128 MB de heap.
+ulimit -t 10 2>/dev/null
+ulimit -f 20480 2>/dev/null
+ulimit -n 128 2>/dev/null
+exec env -i PATH=/usr/bin:/bin LANG=C.UTF-8 HOME=/tmp \
+  /opt/java/openjdk/bin/java \
+  -Xmx128m -Xss1m -XX:MaxMetaspaceSize=64m \
+  -XX:+UseSerialGC -XX:TieredStopAtLevel=1 -XX:-UsePerfData -XX:ActiveProcessorCount=1 \
+  -Dfile.encoding=UTF-8 -Dstdout.encoding=UTF-8 -Dstderr.encoding=UTF-8 \
+  "$@"

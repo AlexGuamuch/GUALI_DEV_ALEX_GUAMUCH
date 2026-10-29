@@ -1,0 +1,31 @@
+# Microservicio compilador: necesita el JDK completo (javac) para compilar el código de los estudiantes.
+# Los programas de los estudiantes se ejecutan con los envoltorios de /opt/guali-jdk (límites de recursos).
+
+FROM maven:3.9.11-eclipse-temurin-25 AS build
+WORKDIR /src
+COPY pom.xml .
+COPY libs/maven-repo libs/maven-repo
+COPY lecciones-ejemplo lecciones-ejemplo
+COPY services services
+RUN --mount=type=cache,target=/root/.m2,sharing=locked \
+    mvn -B -q -pl services/compilador-service -am package -DskipTests \
+    && cp services/compilador-service/target/compilador-service-*.jar /app.jar
+
+FROM eclipse-temurin:25-jdk
+LABEL org.opencontainers.image.title="guali-compilador-service"
+RUN groupadd --system --gid 10001 guali \
+    && useradd --system --uid 10001 --gid guali --no-create-home --shell /usr/sbin/nologin guali
+
+# "JDK" que recibe guali-dev: bin/java y bin/javac son scripts que aplican límites y luego
+# llaman al JDK real. guali-dev arma la ruta <jdkHome>/bin/java por su cuenta.
+COPY services/compilador-service/sandbox/java services/compilador-service/sandbox/javac /opt/guali-jdk/bin/
+RUN sed -i 's/\r$//' /opt/guali-jdk/bin/java /opt/guali-jdk/bin/javac \
+    && chmod 0555 /opt/guali-jdk/bin/java /opt/guali-jdk/bin/javac
+
+WORKDIR /app
+COPY --from=build --chown=root:root /app.jar /app/app.jar
+RUN chmod 0444 /app/app.jar
+USER guali
+ENV GUALI_JDK_HOME=/opt/guali-jdk \
+    JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=40 -XX:+ExitOnOutOfMemoryError -Djava.io.tmpdir=/tmp"
+ENTRYPOINT ["java", "-jar", "/app/app.jar"]
