@@ -53,6 +53,13 @@ controller = new WorkspaceController({ api, model, lessonView, editor, consoleVi
 initMenus();
 initDialogs();
 bindPreferenceControls();
-controller.init();
-loadServerPreferences();
-api.registerVisit();
+api.disponible().then((ok) => {
+  if (!ok) {
+    toast("No se encuentra el servidor de Guali. Inicia los servicios (iniciar.bat) y abre http://localhost:8080.",
+      { type: "danger", timeout: 20000 });
+    return;
+  }
+  controller.init();
+  loadServerPreferences();
+  api.registerVisit();
+});

@@ -9,9 +9,15 @@ const submit = $("#login-submit");
 const password = $("#password");
 const toggle = $("#toggle-password");
 
-const session = await api.getSession();
+const SIN_SERVIDOR = "No se encuentra el servidor de Guali. Inicia los servicios (iniciar.bat) y abre "
+  + "la aplicación en http://localhost:8080, no desde la vista previa de IntelliJ ni como archivo.";
+
+const servidorDisponible = await api.disponible();
+const session = servidorDisponible ? await api.getSession() : { authenticated: false };
 if (session.authenticated) location.replace("admin.html");
-if (new URLSearchParams(location.search).has("expirada")) {
+if (!servidorDisponible) {
+  showError(SIN_SERVIDOR);
+} else if (new URLSearchParams(location.search).has("expirada")) {
   showError("Tu sesión expiró por inactividad. Vuelve a iniciar sesión.");
 }
 

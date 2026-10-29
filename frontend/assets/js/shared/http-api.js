@@ -73,6 +73,16 @@ export class HttpApi {
     return (res.headers.get("Content-Type") ?? "").includes("json") ? res.json() : null;
   }
 
+  /** false si la página no está servida por Guali (por ejemplo, abierta desde IntelliJ o como archivo). */
+  async disponible() {
+    try {
+      const res = await fetch("/api/auth/sesion", { credentials: "same-origin", headers: { Accept: "application/json" } });
+      return res.ok && (res.headers.get("Content-Type") ?? "").includes("json");
+    } catch {
+      return false;
+    }
+  }
+
   /* ---------- Sesión de administrador ---------- */
 
   async getSession() {
