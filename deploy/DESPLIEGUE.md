@@ -1,14 +1,14 @@
 # Despliegue en Internet
 
-Servidor: máquina virtual Ubuntu 24.04 en **Microsoft Azure** (crédito de Azure for Students) con Docker Compose.
+Servidor: máquina virtual Ubuntu 24.04 en **Google Cloud Compute Engine** (prueba gratuita de 300 USD) con Docker Compose.
 Delante: Cloudflare (plan gratuito) como DNS, CDN, WAF, protección DDoS y TLS.
 
 ```
-Usuario ─HTTPS─> Cloudflare ─HTTPS + certificado de cliente─> VM de Azure :443 nginx ─> gateway ─> microservicios ─> MariaDB
+Usuario ─HTTPS─> Cloudflare ─HTTPS + certificado de cliente─> VM de Google Cloud :443 nginx ─> gateway ─> microservicios ─> MariaDB
 ```
 
-MariaDB corre en un contenedor dentro de la VM: Azure retiró su servicio administrado "Azure Database for MariaDB"
-y el proyecto exige MariaDB.
+MariaDB corre en un contenedor dentro de la VM: el servicio administrado de bases de datos de Google (Cloud SQL) no ofrece
+MariaDB y el proyecto la exige.
 
 Tiempo estimado: 1 a 2 horas, más la espera de los nameservers del dominio (de minutos a 24 h). Conviene hacer primero el paso 2.
 
@@ -39,66 +39,60 @@ type $env:USERPROFILE\.ssh\id_ed25519.pub
 
 Copiar la línea que empieza con `ssh-ed25519`.
 
-## 4. Crear la máquina virtual en Azure
+## 4. Activar Google Cloud y crear la máquina virtual
 
-<https://portal.azure.com> → **Virtual machines → Create → Azure virtual machine**.
+1. <https://cloud.google.com/free> → **Get started for free**. Pide una tarjeta solo para verificar: durante la prueba
+   no cobra, y al terminar los 90 días o los 300 USD los recursos se detienen hasta que actives una cuenta de pago.
+2. En <https://console.cloud.google.com>: crear un proyecto llamado `guali` y seleccionarlo.
+3. **Compute Engine → VM instances → Create instance** (la primera vez pide habilitar la API: aceptar y esperar).
 
-**Basics**
-
-| Campo | Valor |
-|---|---|
-| Subscription | Azure for Students |
-| Resource group | Create new → `guali-rg` |
-| Virtual machine name | `guali` |
-| Region | **East US 2**, **South Central US** o **Central US** (las suscripciones de estudiante solo permiten algunas regiones; si una da error, prueba otra) |
-| Availability options | No infrastructure redundancy required |
-| Security type | Standard |
-| Image | **Ubuntu Server 24.04 LTS - x64 Gen2** |
-| Size | **Standard_B2s** (2 vCPU, 4 GiB). Si no está disponible: **Standard_B2als_v2** u otro de 2 vCPU y 4 GiB |
-| Authentication type | **SSH public key** |
-| Username | `guali` |
-| SSH public key source | Use existing public key → pegar la llave del paso 3 |
-| Public inbound ports | Allow selected ports → **SSH (22)** |
-
-**Disks:** OS disk type **Standard SSD** (30 GiB es suficiente).
-**Networking:** dejar la red y la IP pública que propone (la IP Standard es fija).
-**Management:** confirmar que **Auto-shutdown** esté **desactivado** (la aplicación debe estar siempre en línea).
-
-**Review + create → Create.** Al terminar, anotar la **Public IP address** de la VM.
-
-> Costo aproximado: 35 USD al mes (VM B2s + disco + IP). El crédito de Azure for Students alcanza para varios meses y,
-> si se agota, la suscripción se suspende sin cobrar a una tarjeta. Revisa el precio actual en la calculadora de Azure.
-
-**Alerta de gasto (recomendado):** Cost Management → **Budgets → Add** → 25 USD al mes con aviso por correo.
-
-## 5. Abrir el puerto 443 (grupo de seguridad de red)
-
-VM `guali` → **Networking → Network settings → Create port rule → Inbound port rule**:
+**Machine configuration**
 
 | Campo | Valor |
 |---|---|
-| Source | Any |
-| Destination port ranges | 443 |
-| Protocol | TCP |
-| Action | Allow |
-| Name | `Permitir-HTTPS` |
+| Name | `guali` |
+| Region / Zone | **us-central1** (Iowa) / `us-central1-a` |
+| Series / Machine type | **E2** / **e2-standard-2** (2 vCPU, 8 GB). Más barato: **e2-medium** (2 vCPU, 4 GB) |
 
-Opcional pero recomendado: editar la regla **SSH** y cambiar Source a **My IP address**.
+**OS and storage → Change**: **Ubuntu**, versión **Ubuntu 24.04 LTS (x86/64)**, disco **Balanced persistent disk**, **30 GB**.
+
+**Networking**: marcar **Allow HTTPS traffic** (no hace falta HTTP).
+
+**Security → Manage access → Add manually generated SSH keys → Add item**: pegar la llave pública del paso 3.
+Google usa el texto final de la llave (`guali`) como nombre de usuario en la VM.
+
+**Create.** Al terminar, anotar la **External IP** de la VM.
+
+> Costo aproximado: e2-standard-2 unos 55 USD al mes y e2-medium unos 30 USD (VM + disco + IP). Los 300 USD de la prueba
+> cubren los 90 días con cualquiera de las dos. Revisa el precio en la calculadora de Google Cloud.
+
+**Alerta de gasto (recomendado):** Billing → **Budgets & alerts → Create budget** → 50 USD con aviso por correo.
+
+## 5. IP fija y firewall
+
+**IP fija:** VPC network → **IP addresses** → en la fila de la IP externa de `guali` → **Promote to static IP address**
+(nombre `guali-ip`). Así la IP no cambia si la VM se reinicia.
+
+**Firewall:** al marcar "Allow HTTPS traffic" Google crea la regla `default-allow-https` (puerto 443 desde Internet).
+La regla `default-allow-ssh` (puerto 22) ya existe. Opcional pero recomendado: VPC network → **Firewall** →
+`default-allow-ssh` → Edit → Source IPv4 ranges: tu IP pública seguida de `/32`.
 
 Todo lo demás queda cerrado. Aunque el 443 esté abierto, nginx solo acepta conexiones que traen el certificado de
-Cloudflare (paso 9). Docker publica puertos saltándose `ufw`; por eso se usa el grupo de seguridad de red de Azure,
-que filtra fuera de la VM.
+Cloudflare (paso 9). Docker publica puertos saltándose `ufw`; por eso se usa el firewall de Google Cloud, que filtra
+fuera de la VM.
 
 ## 6. Preparar el servidor
+
+Desde PowerShell en tu PC (o con el botón **SSH** de la lista de VM, que abre una terminal en el navegador):
 
 ```bash
 ssh guali@IP_DE_LA_VM
 ```
 
-Azure ya creó el usuario `guali` con permisos de administrador, sin contraseña y sin acceso como root.
+Google ya creó el usuario `guali` con permisos de administrador y sin contraseña, a partir de tu llave.
 
 ```bash
-# SSH solo con llave (Azure ya lo deja así; se refuerza por si acaso)
+# SSH solo con llave (Google ya lo deja así; se refuerza por si acaso)
 sudo sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/; s/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
 sudo systemctl restart ssh
 
@@ -106,7 +100,7 @@ sudo systemctl restart ssh
 sudo apt-get update && sudo apt-get -y upgrade
 sudo apt-get install -y unattended-upgrades fail2ban git
 
-# 2 GB de swap (la primera compilación de las imágenes usa bastante memoria)
+# 2 GB de swap (necesario con e2-medium; con e2-standard-2 es un respaldo)
 sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
 echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 
@@ -188,7 +182,7 @@ Cloudflare → **DNS → Records → Add record**:
 
 | Tipo | Nombre | Contenido | Proxy |
 |---|---|---|---|
-| A | `@` | IP pública de la VM | **Proxied** (nube naranja) |
+| A | `@` | IP externa de la VM | **Proxied** (nube naranja) |
 | CNAME | `www` | tu dominio | **Proxied** |
 
 Abrir `https://tu-dominio` y entrar a `https://tu-dominio/login.html` con `ADMIN_USUARIO` / `ADMIN_CLAVE`.
@@ -236,5 +230,6 @@ Debe terminar con `21 correctas, 0 con falla`. Hazla antes del paso 13: Bot Figh
 | Error 521 | nginx no está corriendo: `docker compose logs nginx`. |
 | Error 502 | El gateway o un servicio aún arranca: `docker compose ps`. |
 | No llega la página | Los nameservers todavía no cambian, o el registro DNS no está "Proxied". |
-| Al crear la VM: `RequestDisallowedByAzure` o "size not available" | La suscripción de estudiante no permite esa región o tamaño: elegir otra región (East US 2, South Central US, Central US) u otro tamaño de 2 vCPU y 4 GiB. |
-| `ssh` no conecta | Revisar la regla SSH del grupo de seguridad (si es "My IP address" y cambió tu IP, actualizarla). |
+| Al crear la VM: `QUOTA_EXCEEDED` o "does not have enough resources" | Elegir otra zona de la misma región (`us-central1-b`, `-c`, `-f`) u otra región (`us-east1`, `us-south1`). |
+| `ssh` no conecta | Revisar la regla `default-allow-ssh` (si limitaste el origen a tu IP y cambió, actualizarla) o usar el botón **SSH** de la consola. |
+| `Permission denied (publickey)` | La llave pública no se agregó en la VM (Edit → Security → SSH keys) o el usuario no coincide con el texto final de la llave. |

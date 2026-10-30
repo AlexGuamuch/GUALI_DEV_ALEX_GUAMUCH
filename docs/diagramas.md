@@ -80,8 +80,8 @@ flowchart TB
         CDN["CDN + TLS<br/>WAF · protección DDoS<br/>oculta la IP del servidor"]
     end
 
-    subgraph VPS["Máquina virtual Azure · Ubuntu 24.04 · Standard_B2s · Docker Compose"]
-        FW["Grupo de seguridad de red (NSG): solo 443 y SSH<br/>443 exige certificado de Cloudflare (mTLS)<br/>SSH solo con llave"]
+    subgraph VPS["Google Cloud Compute Engine · e2-standard-2 · Ubuntu 24.04 · Docker Compose"]
+        FW["Firewall de la VPC: solo 443 y SSH<br/>443 exige certificado de Cloudflare (mTLS)<br/>SSH solo con llave"]
         subgraph borde["red: borde"]
             NG["nginx 1.29<br/>proxy inverso · cabeceras de seguridad<br/>límites por IP · frontend estático"]
             GW["gateway<br/>Spring Cloud Gateway<br/>rutas · id anónimo · límite por IP"]
