@@ -1,11 +1,14 @@
 # Despliegue en Internet
 
-Servidor: VPS Ubuntu 24.04 en DigitalOcean (crédito del GitHub Student Developer Pack) con Docker Compose.
+Servidor: máquina virtual Ubuntu 24.04 en **Microsoft Azure** (crédito de Azure for Students) con Docker Compose.
 Delante: Cloudflare (plan gratuito) como DNS, CDN, WAF, protección DDoS y TLS.
 
 ```
-Usuario ─HTTPS─> Cloudflare ─HTTPS + certificado de cliente─> VPS :443 nginx ─> gateway ─> microservicios ─> MariaDB
+Usuario ─HTTPS─> Cloudflare ─HTTPS + certificado de cliente─> VM de Azure :443 nginx ─> gateway ─> microservicios ─> MariaDB
 ```
+
+MariaDB corre en un contenedor dentro de la VM: Azure retiró su servicio administrado "Azure Database for MariaDB"
+y el proyecto exige MariaDB.
 
 Tiempo estimado: 1 a 2 horas, más la espera de los nameservers del dominio (de minutos a 24 h). Conviene hacer primero el paso 2.
 
@@ -20,9 +23,9 @@ Tiempo estimado: 1 a 2 horas, más la espera de los nameservers del dominio (de 
    git push -u origin fase-2:main
    ```
 
-## 2. Cuentas y dominio
+## 2. Dominio y Cloudflare
 
-1. <https://education.github.com/pack> → activar la oferta de **DigitalOcean** (crédito) y la de un **dominio gratis** (por ejemplo Namecheap `.me`).
+1. Conseguir un dominio: el GitHub Student Developer Pack (<https://education.github.com/pack>) suele incluir uno gratis por un año (por ejemplo Namecheap `.me`); si no, un `.xyz` o `.site` cuesta 1 a 3 USD el primer año.
 2. Crear cuenta en **Cloudflare** → **Add a domain** → plan **Free**.
 3. Cloudflare muestra 2 *nameservers*: copiarlos en el registrador del dominio (Namecheap → Domain → Nameservers → Custom DNS).
 4. Esperar el correo de Cloudflare "Your domain is now active".
@@ -36,65 +39,89 @@ type $env:USERPROFILE\.ssh\id_ed25519.pub
 
 Copiar la línea que empieza con `ssh-ed25519`.
 
-## 4. Crear el servidor (Droplet)
+## 4. Crear la máquina virtual en Azure
 
-DigitalOcean → **Create → Droplets**:
+<https://portal.azure.com> → **Virtual machines → Create → Azure virtual machine**.
 
-- Región: **New York** o **San Francisco**.
-- Imagen: **Ubuntu 24.04 LTS**.
-- Plan: **Basic / Regular · 2 vCPU · 4 GB RAM**.
-- Autenticación: **SSH Key** → pegar la llave del paso 3.
-- Nombre: `guali`.
+**Basics**
 
-Anotar la **IP pública**.
+| Campo | Valor |
+|---|---|
+| Subscription | Azure for Students |
+| Resource group | Create new → `guali-rg` |
+| Virtual machine name | `guali` |
+| Region | **East US 2**, **South Central US** o **Central US** (las suscripciones de estudiante solo permiten algunas regiones; si una da error, prueba otra) |
+| Availability options | No infrastructure redundancy required |
+| Security type | Standard |
+| Image | **Ubuntu Server 24.04 LTS - x64 Gen2** |
+| Size | **Standard_B2s** (2 vCPU, 4 GiB). Si no está disponible: **Standard_B2als_v2** u otro de 2 vCPU y 4 GiB |
+| Authentication type | **SSH public key** |
+| Username | `guali` |
+| SSH public key source | Use existing public key → pegar la llave del paso 3 |
+| Public inbound ports | Allow selected ports → **SSH (22)** |
 
-## 5. Firewall de DigitalOcean
+**Disks:** OS disk type **Standard SSD** (30 GiB es suficiente).
+**Networking:** dejar la red y la IP pública que propone (la IP Standard es fija).
+**Management:** confirmar que **Auto-shutdown** esté **desactivado** (la aplicación debe estar siempre en línea).
 
-Networking → **Firewalls → Create Firewall** → aplicarlo al Droplet `guali`.
+**Review + create → Create.** Al terminar, anotar la **Public IP address** de la VM.
 
-| Entrada | Puerto | Origen |
-|---|---|---|
-| SSH | 22 | All IPv4/IPv6 (o solo tu IP) |
-| HTTPS | 443 | All IPv4/IPv6 |
+> Costo aproximado: 35 USD al mes (VM B2s + disco + IP). El crédito de Azure for Students alcanza para varios meses y,
+> si se agota, la suscripción se suspende sin cobrar a una tarjeta. Revisa el precio actual en la calculadora de Azure.
 
-Todo lo demás cerrado. Aunque el 443 esté abierto, nginx solo acepta conexiones que traen el certificado de Cloudflare (paso 9).
-Docker publica puertos saltándose `ufw`; por eso se usa el firewall de DigitalOcean, que está fuera del servidor.
+**Alerta de gasto (recomendado):** Cost Management → **Budgets → Add** → 25 USD al mes con aviso por correo.
+
+## 5. Abrir el puerto 443 (grupo de seguridad de red)
+
+VM `guali` → **Networking → Network settings → Create port rule → Inbound port rule**:
+
+| Campo | Valor |
+|---|---|
+| Source | Any |
+| Destination port ranges | 443 |
+| Protocol | TCP |
+| Action | Allow |
+| Name | `Permitir-HTTPS` |
+
+Opcional pero recomendado: editar la regla **SSH** y cambiar Source a **My IP address**.
+
+Todo lo demás queda cerrado. Aunque el 443 esté abierto, nginx solo acepta conexiones que traen el certificado de
+Cloudflare (paso 9). Docker publica puertos saltándose `ufw`; por eso se usa el grupo de seguridad de red de Azure,
+que filtra fuera de la VM.
 
 ## 6. Preparar el servidor
 
 ```bash
-ssh root@IP_DEL_SERVIDOR
+ssh guali@IP_DE_LA_VM
 ```
+
+Azure ya creó el usuario `guali` con permisos de administrador, sin contraseña y sin acceso como root.
 
 ```bash
-# Usuario sin privilegios con tu llave SSH
-adduser --disabled-password --gecos "" guali
-usermod -aG sudo guali
-echo "guali ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/guali
-rsync --archive --chown=guali:guali ~/.ssh /home/guali
-
-# SSH solo con llave y sin root
-sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/; s/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
-systemctl restart ssh
+# SSH solo con llave (Azure ya lo deja así; se refuerza por si acaso)
+sudo sed -i 's/^#\?PermitRootLogin.*/PermitRootLogin no/; s/^#\?PasswordAuthentication.*/PasswordAuthentication no/' /etc/ssh/sshd_config
+sudo systemctl restart ssh
 
 # Actualizaciones automáticas de seguridad y bloqueo de ataques a SSH
-apt-get update && apt-get -y upgrade
-apt-get install -y unattended-upgrades fail2ban git
+sudo apt-get update && sudo apt-get -y upgrade
+sudo apt-get install -y unattended-upgrades fail2ban git
 
 # 2 GB de swap (la primera compilación de las imágenes usa bastante memoria)
-fallocate -l 2G /swapfile && chmod 600 /swapfile && mkswap /swapfile && swapon /swapfile
-echo '/swapfile none swap sw 0 0' >> /etc/fstab
+sudo fallocate -l 2G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
+echo '/swapfile none swap sw 0 0' | sudo tee -a /etc/fstab
 
 # Docker
-curl -fsSL https://get.docker.com | sh
-usermod -aG docker guali
+curl -fsSL https://get.docker.com | sudo sh
+sudo usermod -aG docker guali
 exit
 ```
+
+Volver a entrar con `ssh guali@IP_DE_LA_VM` para que el permiso de Docker tenga efecto.
 
 ## 7. Descargar el código en el servidor
 
 ```bash
-ssh guali@IP_DEL_SERVIDOR
+ssh guali@IP_DE_LA_VM
 ssh-keygen -t ed25519 -C "servidor-guali" -N "" -f ~/.ssh/id_ed25519
 cat ~/.ssh/id_ed25519.pub
 ```
@@ -161,7 +188,7 @@ Cloudflare → **DNS → Records → Add record**:
 
 | Tipo | Nombre | Contenido | Proxy |
 |---|---|---|---|
-| A | `@` | IP del servidor | **Proxied** (nube naranja) |
+| A | `@` | IP pública de la VM | **Proxied** (nube naranja) |
 | CNAME | `www` | tu dominio | **Proxied** |
 
 Abrir `https://tu-dominio` y entrar a `https://tu-dominio/login.html` con `ADMIN_USUARIO` / `ADMIN_CLAVE`.
@@ -209,3 +236,5 @@ Debe terminar con `21 correctas, 0 con falla`. Hazla antes del paso 13: Bot Figh
 | Error 521 | nginx no está corriendo: `docker compose logs nginx`. |
 | Error 502 | El gateway o un servicio aún arranca: `docker compose ps`. |
 | No llega la página | Los nameservers todavía no cambian, o el registro DNS no está "Proxied". |
+| Al crear la VM: `RequestDisallowedByAzure` o "size not available" | La suscripción de estudiante no permite esa región o tamaño: elegir otra región (East US 2, South Central US, Central US) u otro tamaño de 2 vCPU y 4 GiB. |
+| `ssh` no conecta | Revisar la regla SSH del grupo de seguridad (si es "My IP address" y cambió tu IP, actualizarla). |
